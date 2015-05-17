@@ -21,22 +21,86 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QTreeWidget" name="sourceView">
-        <column>
-         <property name="text">
-          <string notr="true">1</string>
-         </property>
-        </column>
-       </widget>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QLabel" name="source_label">
+          <property name="text">
+           <string>Source directory</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QLineEdit" name="source_path"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="source_browse">
+            <property name="text">
+             <string>Browse</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QTreeWidget" name="source_view">
+          <column>
+           <property name="text">
+            <string notr="true">1</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="source_size_label">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
-       <widget class="QTreeWidget" name="destinationView">
-        <column>
-         <property name="text">
-          <string notr="true">1</string>
-         </property>
-        </column>
-       </widget>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <widget class="QLabel" name="destination_label">
+          <property name="text">
+           <string>Destination directory</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="QLineEdit" name="destination_path"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="destination_browse">
+            <property name="text">
+             <string>Browse</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QTreeWidget" name="destination_view">
+          <column>
+           <property name="text">
+            <string notr="true">1</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="destination_size_label">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </item>
@@ -45,16 +109,51 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <widget class="QPushButton" name="copyNewButton">
+         <widget class="QCheckBox" name="check_file_contents">
           <property name="text">
-           <string>PushButton</string>
+           <string>Check file contents (for files of the same size)</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="removeDeleted">
+         <widget class="QCheckBox" name="check_file_contents_newer">
           <property name="text">
-           <string>PushButton</string>
+           <string>But only check those with newer dates</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="check_bakcup_overwritten">
+          <property name="text">
+           <string>Backup overwritten files</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="scan_button">
+          <property name="text">
+           <string>Scan files</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="copy_button">
+          <property name="text">
+           <string>Copy new files</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="do_remove_deleted">
+          <property name="text">
+           <string>Remove deleted files</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QProgressBar" name="progress_bar">
+          <property name="value">
+           <number>24</number>
           </property>
          </widget>
         </item>
@@ -70,6 +169,13 @@
            </size>
           </property>
          </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="info_label">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
