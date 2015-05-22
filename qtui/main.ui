@@ -144,6 +144,13 @@
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="restore_button">
+          <property name="text">
+           <string>Restore files</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="remove_button">
           <property name="text">
            <string>Remove deleted files</string>

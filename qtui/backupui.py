@@ -9,11 +9,22 @@ from functools import partial
 data = [
     # r'd:\stuff',
     # r'e:\backups\stuff',
-    r'd:\work\054_backup_tool\qtui\test_src',
-    r'd:\work\054_backup_tool\qtui\test_dest',
+    # r'd:\work\054_backup_tool\qtui\test_src',
+    # r'd:\work\054_backup_tool\qtui\test_dest',
+    # r'd:\media',
+    # r'e:\backups\media',
+
+    r'd:\muzica',
+    r'e:\backups\muzica',
 ]
 
 BackupUiBase, BUiQtBase = loadUiType("main.ui")
+
+def log(s):
+    if type(s) is unicode:
+        print repr(s)  # this ensures the value is printed in a way that can be reversed
+    else:
+        print s
 
 def get_dir_structure(path):
 
@@ -21,7 +32,7 @@ def get_dir_structure(path):
 
     size = 0
 
-    for entry in os.listdir(path):
+    for entry in os.listdir(unicode(path)):
         # base = os.path.basename(entry)
         base, entry = entry, os.path.join(path, entry)
         if os.path.isdir(entry):
@@ -51,8 +62,8 @@ def get_dir_difference(source_struct, destination_struct):
 
         if data[0] == 'file':
             if data[2] != destination_struct[name][2]:
-                print "file %s has different sizes: %d vs %d" % (name, data[2], destination_struct[name][2])
-                print "file path is [%s] [%s]" % (data[1], destination_struct[name][1])
+                log("file %s has different sizes: %d vs %d" % (name, data[2], destination_struct[name][2]))
+                log("file path is [%s] [%s]" % (data[1], destination_struct[name][1]))
                 diff[name] = data
                 size += data[2]
             else:
@@ -102,7 +113,7 @@ def copy_new_files(source_path, destination_path, difference, progress_func, opt
             src_path = os.path.join(source_path, path)
             if data[0] == 'dir':
                 if not os.path.isdir(dest_path):
-                    print "creating directory [%s]" % (dest_path)
+                    log("creating directory [%s]" % (dest_path))
                     os.mkdir(dest_path)
                 queue.append((data[1], path))
             elif data[0] == 'file':
@@ -110,16 +121,16 @@ def copy_new_files(source_path, destination_path, difference, progress_func, opt
                     if backup_overwritten:
                         backup_path = dest_path + backup_suffix
                         if os.path.isfile(backup_path):
-                            print "warning, removing (backup?) file [%s]" % (backup_path)
+                            log("warning, removing (backup?) file [%s]" % (backup_path))
                             os.remove(backup_path)
 
-                        print "saving file [%s] to [%s]" % (dest_path, backup_path)
+                        log("saving file [%s] to [%s]" % (dest_path, backup_path))
                         os.rename(dest_path, backup_path)
 
-                    print "removing old file [%s]" % (dest_path)
+                    log("removing old file [%s]" % (dest_path))
                     os.remove(dest_path)
 
-                print "copying file [%s] to [%s]" % (src_path, dest_path)
+                log("copying file [%s] to [%s]" % (src_path, dest_path))
                 copy_file_with_progress(src_path, dest_path, progress_func)
 
 def remove_deleted(source_path, destination_path, rev_difference, progress_func, options=None):
@@ -138,19 +149,19 @@ def remove_deleted(source_path, destination_path, rev_difference, progress_func,
             src_path = os.path.join(source_path, path)
             if data[0] == 'dir':
                 if not os.path.isdir(dest_path):
-                    print "creating directory [%s]" % (dest_path)
+                    log("creating directory [%s]" % (dest_path))
                     os.mkdir(dest_path)
                 queue.append((data[1], path))
                 if not os.path.isdir(src_path):
                     dirs_to_remove.append(dest_path)
             elif data[0] == 'file':
                 if os.path.isfile(dest_path):
-                    print "removing file [%s]" % (dest_path)
+                    log("removing file [%s]" % (dest_path))
                     os.remove(dest_path)
 
     while len(dirs_to_remove) > 0:
         dest_path = dirs_to_remove.pop()
-        print "removing directory [%s]" % (dest_path)
+        log("removing directory [%s]" % (dest_path))
         os.rmdir(dest_path)
 
 def format_size(size):
@@ -195,6 +206,7 @@ class BackupUi(BackupUiBase, BUiQtBase):
 
         self.scan_button.clicked.connect(self.scan_directories)
         self.copy_button.clicked.connect(self.copy_new_files)
+        self.restore_button.clicked.connect(self.restore_files)
         self.remove_button.clicked.connect(self.remove_deleted)
 
         self.progress_bar.setMinimum(0)
@@ -299,6 +311,17 @@ class BackupUi(BackupUiBase, BUiQtBase):
         self.progress_bar.show()
 
         copy_new_files(source_dir, destination_dir, self.difference, self.progress_cb)
+
+    def restore_files(self):
+        source_dir = str(self.source_path.text())
+        destination_dir = str(self.destination_path.text())
+
+        self.total_count = 0
+
+        self.progress_bar.setValue(0)
+        self.progress_bar.show()
+
+        copy_new_files(destination_dir, source_dir, self.rev_difference, self.progress_cb)
 
     def remove_deleted(self):
         source_dir = str(self.source_path.text())
