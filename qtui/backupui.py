@@ -6,6 +6,13 @@ from PyQt4.QtGui import QApplication, QTreeWidgetItem, QFileDialog, QIcon
 from PyQt4.uic import loadUiType
 from functools import partial
 
+data = [
+    # r'd:\stuff',
+    # r'e:\backups\stuff',
+    r'd:\work\054_backup_tool\qtui\test_src',
+    r'd:\work\054_backup_tool\qtui\test_dest',
+]
+
 BackupUiBase, BUiQtBase = loadUiType("main.ui")
 
 def get_dir_structure(path):
@@ -14,8 +21,9 @@ def get_dir_structure(path):
 
     size = 0
 
-    for entry in glob.glob(os.path.join(path, '*')):
-        base = os.path.basename(entry)
+    for entry in os.listdir(path):
+        # base = os.path.basename(entry)
+        base, entry = entry, os.path.join(path, entry)
         if os.path.isdir(entry):
             str_r, size_r = get_dir_structure(entry)
             struct[base] = ('dir', str_r, size_r)
@@ -114,6 +122,37 @@ def copy_new_files(source_path, destination_path, difference, progress_func, opt
                 print "copying file [%s] to [%s]" % (src_path, dest_path)
                 copy_file_with_progress(src_path, dest_path, progress_func)
 
+def remove_deleted(source_path, destination_path, rev_difference, progress_func, options=None):
+    if options is None:
+        options = {}
+
+    queue = [(rev_difference, '')]
+
+    dirs_to_remove = []
+
+    while len(queue) > 0:
+        baseobj, basepath = queue.pop()
+        for name, data in baseobj.iteritems():
+            path = os.path.join(basepath, name)
+            dest_path = os.path.join(destination_path, path)
+            src_path = os.path.join(source_path, path)
+            if data[0] == 'dir':
+                if not os.path.isdir(dest_path):
+                    print "creating directory [%s]" % (dest_path)
+                    os.mkdir(dest_path)
+                queue.append((data[1], path))
+                if not os.path.isdir(src_path):
+                    dirs_to_remove.append(dest_path)
+            elif data[0] == 'file':
+                if os.path.isfile(dest_path):
+                    print "removing file [%s]" % (dest_path)
+                    os.remove(dest_path)
+
+    while len(dirs_to_remove) > 0:
+        dest_path = dirs_to_remove.pop()
+        print "removing directory [%s]" % (dest_path)
+        os.rmdir(dest_path)
+
 def format_size(size):
     if size < 2048:
         return '%d B' % (size)
@@ -141,17 +180,22 @@ class BackupUi(BackupUiBase, BUiQtBase):
         self.destination_view.setColumnCount(3)
 
         self.source_view.setHeaderItem(QTreeWidgetItem(['kind', 'path', 'size']))
+        self.destination_view.setHeaderItem(QTreeWidgetItem(['kind', 'path', 'size']))
 
         self.source_browse.clicked.connect(partial(self.browse_for_dir, self.source_browse))
         self.destination_browse.clicked.connect(partial(self.browse_for_dir, self.destination_browse))
 
-        self.source_path.setText(r'd:\media')
-        self.destination_path.setText(r'e:\media')
+        # self.source_path.setText(r'd:\media')
+        # self.destination_path.setText(r'e:\media')
         # self.source_path.setText(r'd:\work\054_backup_tool\qtui\test_src')
         # self.destination_path.setText(r'd:\work\054_backup_tool\qtui\test_dest')
 
+        self.source_path.setText(data[0])
+        self.destination_path.setText(data[1])
+
         self.scan_button.clicked.connect(self.scan_directories)
         self.copy_button.clicked.connect(self.copy_new_files)
+        self.remove_button.clicked.connect(self.remove_deleted)
 
         self.progress_bar.setMinimum(0)
         self.progress_bar.setMaximum(1000)
@@ -188,9 +232,13 @@ class BackupUi(BackupUiBase, BUiQtBase):
 
         self.difference, self.difference_size = get_dir_difference(self.source_struct, self.destination_struct)
 
+        self.rev_difference, self.rev_difference_size = get_dir_difference(self.destination_struct, self.source_struct)
+
         self.source_size_label.setText("difference: %s" % (format_size(self.difference_size)))
+        self.destination_size_label.setText("difference: %s" % (format_size(self.rev_difference_size)))
 
         self.update_source_view()
+        self.update_destination_view()
 
     def update_source_view(self):
         if self.difference is None:
@@ -199,6 +247,27 @@ class BackupUi(BackupUiBase, BUiQtBase):
         self.source_view.clear()
 
         queue = [(self.difference, self.source_view.addTopLevelItem)]
+
+        while len(queue) > 0:
+            baseobj, inserter = queue.pop()
+            for name, data in baseobj.iteritems():
+                if data[0] == 'dir':
+                    child = QTreeWidgetItem(['', name, format_size(data[2])])
+                    child.setIcon(0, QIcon('dir_icon.png'))
+                    inserter(child)
+                    queue.append((data[1], child.addChild))
+                elif data[0] == 'file':
+                    entry = QTreeWidgetItem(['', name, format_size(data[2])])
+                    entry.setIcon(0, QIcon('file_icon.png'))
+                    inserter(entry)
+
+    def update_destination_view(self):
+        if self.rev_difference is None:
+            return
+
+        self.destination_view.clear()
+
+        queue = [(self.rev_difference, self.destination_view.addTopLevelItem)]
 
         while len(queue) > 0:
             baseobj, inserter = queue.pop()
@@ -230,6 +299,12 @@ class BackupUi(BackupUiBase, BUiQtBase):
         self.progress_bar.show()
 
         copy_new_files(source_dir, destination_dir, self.difference, self.progress_cb)
+
+    def remove_deleted(self):
+        source_dir = str(self.source_path.text())
+        destination_dir = str(self.destination_path.text())
+
+        remove_deleted(source_dir, destination_dir, self.rev_difference, None)
 
     def error_message(self, message):
         self.info_label.setText(message)

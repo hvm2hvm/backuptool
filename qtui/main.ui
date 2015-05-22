@@ -144,7 +144,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="do_remove_deleted">
+         <widget class="QPushButton" name="remove_button">
           <property name="text">
            <string>Remove deleted files</string>
           </property>
