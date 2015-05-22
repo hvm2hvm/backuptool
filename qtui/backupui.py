@@ -14,8 +14,11 @@ data = [
     # r'd:\media',
     # r'e:\backups\media',
 
-    r'd:\muzica',
-    r'e:\backups\muzica',
+    # r'd:\muzica',
+    # r'e:\backups\muzica',
+
+    r'd:\work',
+    r'e:\backups\work',
 ]
 
 BackupUiBase, BUiQtBase = loadUiType("main.ui")
@@ -26,7 +29,30 @@ def log(s):
     else:
         print s
 
-def get_dir_structure(path):
+def is_link_win(fp):
+    if os.path.isdir(fp):
+        return False
+    if os.path.getsize(fp) > 0:
+        return False
+
+    f = None
+    try:
+        f = open(fp, 'rb')
+        f.seek(0, os.SEEK_END)
+        if f.tell() > 0:
+            return True
+        else:
+            return False
+    finally:
+        if f is not None:
+            f.close()
+
+if os.name == 'nt':
+    is_link = is_link_win
+else:
+    is_link = os.path.islink
+
+def get_dir_structure(path, ignore_links=True):
 
     struct = {}
 
@@ -35,8 +61,12 @@ def get_dir_structure(path):
     for entry in os.listdir(unicode(path)):
         # base = os.path.basename(entry)
         base, entry = entry, os.path.join(path, entry)
+
+        if ignore_links and is_link(entry):
+            continue
+
         if os.path.isdir(entry):
-            str_r, size_r = get_dir_structure(entry)
+            str_r, size_r = get_dir_structure(entry, ignore_links)
             struct[base] = ('dir', str_r, size_r)
             size += size_r
         elif os.path.isfile(entry):
@@ -239,8 +269,10 @@ class BackupUi(BackupUiBase, BUiQtBase):
             self.error_message("Destination directory is invalid")
             return
 
-        self.source_struct, self.source_size = get_dir_structure(source_dir)
-        self.destination_struct, self.destination_size = get_dir_structure(destination_dir)
+        ignore_links = self.ignore_links.isChecked()
+
+        self.source_struct, self.source_size = get_dir_structure(source_dir, ignore_links)
+        self.destination_struct, self.destination_size = get_dir_structure(destination_dir, ignore_links)
 
         self.difference, self.difference_size = get_dir_difference(self.source_struct, self.destination_struct)
 

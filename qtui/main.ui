@@ -109,6 +109,16 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
+         <widget class="QCheckBox" name="ignore_links">
+          <property name="text">
+           <string>Ignore links</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QCheckBox" name="check_file_contents">
           <property name="text">
            <string>Check file contents (for files of the same size)</string>
