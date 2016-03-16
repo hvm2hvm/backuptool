@@ -5,10 +5,10 @@ from distutils.core import setup
 setup(
     name='backuptool',
     version='1.0',
-    description='Python Distribution Utilities',
-    author='Greg Ward',
-    author_email='gward@python.net',
-    url='https://www.python.org/sigs/distutils-sig/',
+    description='A backup utility',
+    author='hvm',
+    author_email='',
+    url='https://github.com/hvm2hvm/backuptool',
     packages=['libbt'],
     requires=['django', 'pytest'],
 )
